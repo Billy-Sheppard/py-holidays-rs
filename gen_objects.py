@@ -151,7 +151,7 @@ countries = [
 # with open("holidays.ron", "w", encoding="UTF-8") as f:
 print("{", file=sys.stdout)
 for country in countries:
-    print("\"" + country[1] + "\"", file=sys.stdout)
+    print(country[1], file=sys.stdout)
     print(":", file=sys.stdout)
     if len(country[2]) > 0:
         print("{", file=sys.stdout)

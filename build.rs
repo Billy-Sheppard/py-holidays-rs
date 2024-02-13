@@ -1,11 +1,19 @@
 fn main() {
     if std::fs::read("holidays.zip").is_err() {
+        // install holidays package
+        std::process::Command::new("pip")
+            .arg("install")
+            .arg("holidays")
+            .output()
+            .unwrap();
+
         // generate objects
         let py_out = std::process::Command::new("python")
             .arg("gen_objects.py")
+            .stdout(std::process::Stdio::piped())
             .output()
             .unwrap()
-            .stderr;
+            .stdout;
 
         // write zip file
         let out = std::fs::File::create("holidays.zip").unwrap();

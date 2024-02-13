@@ -26,8 +26,5 @@ fn main() {
 
         // flush and finish
         zip.finish().unwrap();
-
-        // delete uncompressed
-        std::fs::remove_file("holidays.ron").unwrap();
     }
 }

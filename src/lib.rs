@@ -4,7 +4,7 @@ mod types;
 pub use types::*;
 
 type CountryHolidayMap =
-    BTreeMap<types::CountryCode, BTreeMap<String, BTreeMap<chrono::NaiveDate, String>>>;
+    BTreeMap<types::CountryCode, BTreeMap<types::SubDivision, BTreeMap<chrono::NaiveDate, String>>>;
 
 const HOLIDAYS: &[u8] = include_bytes!("../holidays");
 
@@ -62,6 +62,7 @@ mod tests {
 
     #[test]
     fn test_initialise() {
+        dbg!(&initialise());
         assert!(initialise().is_ok());
     }
 

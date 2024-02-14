@@ -1,5 +1,5 @@
 fn main() {
-    if std::fs::read("holidays.zip").is_err() {
+    if std::fs::read("holidays").is_err() {
         // install holidays package
         std::process::Command::new("pip")
             .arg("install")
@@ -15,16 +15,11 @@ fn main() {
             .unwrap()
             .stdout;
 
-        // write zip file
-        let out = std::fs::File::create("holidays.zip").unwrap();
-
-        let mut zip = zip::ZipWriter::new(out);
-
+        let mut e = flate2::write::DeflateEncoder::new(Vec::new(), flate2::Compression::best());
         // compress the ron
-        zip.start_file("holidays.ron", Default::default()).unwrap();
-        std::io::Write::write_all(&mut zip, &py_out).unwrap();
+        std::io::Write::write_all(&mut e, &py_out).unwrap();
 
         // flush and finish
-        zip.finish().unwrap();
+        std::fs::write("holidays", e.finish().unwrap()).unwrap();
     }
 }

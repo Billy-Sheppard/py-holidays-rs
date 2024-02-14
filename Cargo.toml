@@ -1,6 +1,6 @@
 [package]
 name = "py-holidays-rs"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 authors = ["Billy Sheppard"]
 license = "Apache-2.0"
@@ -14,11 +14,10 @@ homepage = "https://github.com/Billy-Sheppard/py-holidays-rs"
 ron = "0.8"
 serde = { features = ["derive"], version = "1" }
 chrono = { features = ["serde"], version = "0.4" }
-include-flate = "0.3"
-zip = { default-features = false, features = ["deflate"], version = "0.6" }
+flate2 = { version = "1.0" }
 
 [build-dependencies]
-zip = { default-features = false, features = ["deflate"], version = "0.6" }
+flate2 = { version = "1.0" }
 
 [features]
 default = []

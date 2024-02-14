@@ -1,7 +1,4 @@
-use std::{
-    collections::BTreeMap,
-    io::{Cursor, Read},
-};
+use std::{collections::BTreeMap, io::Read};
 mod types;
 
 pub use types::*;
@@ -9,16 +6,12 @@ pub use types::*;
 type CountryHolidayMap =
     BTreeMap<types::CountryCode, BTreeMap<String, BTreeMap<chrono::NaiveDate, String>>>;
 
-include_flate::flate!(static HOLIDAYS: [u8] from "holidays.zip");
+const HOLIDAYS: &[u8] = include_bytes!("../holidays");
 
 pub fn initialise() -> Result<CountryHolidayMap, String> {
-    let mut zip =
-        zip::ZipArchive::new(Cursor::new(HOLIDAYS.as_slice())).map_err(|e| format!("{e:?}"))?;
+    let mut d = flate2::read::DeflateDecoder::new(HOLIDAYS);
     let mut out = Vec::new();
-    zip.by_index(0)
-        .map_err(|e| format!("{e:?}"))?
-        .read_to_end(&mut out)
-        .map_err(|e| format!("{e:?}"))?;
+    d.read_to_end(&mut out).unwrap();
 
     ron::de::from_bytes(&out).map_err(|e| format!("{e:?}"))
 }
@@ -58,9 +51,6 @@ mod years {
             .wait_with_output()
             .map_err(|e| format!("{e:?}"))?
             .stdout;
-
-        std::fs::write("test.ron", String::from_utf8_lossy(&out).to_string())
-            .map_err(|e| format!("{e:?}"))?;
 
         ron::de::from_bytes(&out).map_err(|e| format!("{e:?}"))
     }

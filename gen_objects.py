@@ -148,35 +148,59 @@ countries = [
     ("Zimbabwe", "ZW", [])
 ]
 
-# with open("holidays.ron", "w", encoding="UTF-8") as f:
+# print opening object bracket
 print("{", file=sys.stdout)
+# loop through countries
 for country in countries:
-    print(country[1], file=sys.stdout)
-    print(":", file=sys.stdout)
+    # print country code as first identifier
+    print(country[1] + ":", file=sys.stdout)
+
+    # if country has subdivisions 
     if len(country[2]) > 0:
+        # open an object
         print("{", file=sys.stdout)
+        # and loop through the subdivisions
         for subdiv in country[2]:
-            print("\"" + subdiv + "\"", file=sys.stdout)
-            print(":", file=sys.stdout)
+            # if the subdivision starts with a digit, preprend an underscore
+            if subdiv[0].isdigit():
+                print("_" + subdiv + ":", file=sys.stdout)
+            else:
+                print(subdiv + ":", file=sys.stdout)
+            
+            # get out the specific subdivisions holidays
             holidays_ = holidays.country_holidays(country[1], subdiv=subdiv, language="en_US", years=years)
+            # and stringify the keys
             holidays_ = {str(key): value for key, value in holidays_.items()}
-            # json.dump(holidays_, f, ensure_ascii=False)
+            
+            # dump the holiday object as json
             print(json.dumps(holidays_, ensure_ascii=False), file=sys.stdout)
             print(",", file=sys.stdout)
 
+        # then do the same for the national holidays
+        # get out the specific national holidays
         holidays_ = holidays.country_holidays(country[1], language="en_US", years=years)
+        # and stringify the keys
         holidays_ = {str(key): value for key, value in holidays_.items()}
-        print("\"National\":", file=sys.stdout)
-        # json.dump(holidays_, f, ensure_ascii=False)
+
+        # print the key
+        print("National:", file=sys.stdout)
+        # dump the holiday object as json
         print(json.dumps(holidays_, ensure_ascii=False), file=sys.stdout)
-        print("}", file=sys.stdout)
-        print(",", file=sys.stdout)
+
+        # close the object from line 161
+        print("},", file=sys.stdout)
     else:
+        # get out the specific national holidays
         holidays_ = holidays.country_holidays(country[1], language="en_US", years=years)
+        # and stringify the keys
         holidays_ = {str(key): value for key, value in holidays_.items()}
-        print("{\"National\":", file=sys.stdout)
-        # json.dump(holidays_, f, ensure_ascii=False)
+
+        # create a new object with the key
+        print("{National:", file=sys.stdout)        
+        # dump the holiday object as json
         print(json.dumps(holidays_, ensure_ascii=False), file=sys.stdout)
-        print("}", file=sys.stdout)
-        print(",", file=sys.stdout)
+        # close the object from line 199
+        print("},", file=sys.stdout)
+
+# close the object from line 152
 print("}", file=sys.stdout)

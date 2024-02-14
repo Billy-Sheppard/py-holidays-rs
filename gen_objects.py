@@ -163,7 +163,14 @@ for country in countries:
             # json.dump(holidays_, f, ensure_ascii=False)
             print(json.dumps(holidays_, ensure_ascii=False), file=sys.stdout)
             print(",", file=sys.stdout)
-        print("},", file=sys.stdout)
+
+        holidays_ = holidays.country_holidays(country[1], language="en_US", years=years)
+        holidays_ = {str(key): value for key, value in holidays_.items()}
+        print("\"National\":", file=sys.stdout)
+        # json.dump(holidays_, f, ensure_ascii=False)
+        print(json.dumps(holidays_, ensure_ascii=False), file=sys.stdout)
+        print("}", file=sys.stdout)
+        print(",", file=sys.stdout)
     else:
         holidays_ = holidays.country_holidays(country[1], language="en_US", years=years)
         holidays_ = {str(key): value for key, value in holidays_.items()}

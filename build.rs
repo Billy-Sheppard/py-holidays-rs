@@ -1,5 +1,5 @@
 fn main() {
-    if std::fs::read("holidays").is_err() {
+    if std::fs::read("holidays").is_err() && std::env::var("DOCS_RS").is_err() {
         // install holidays package
         std::process::Command::new("pip")
             .arg("install")

@@ -181,7 +181,7 @@ dependencies = [
 
 [[package]]
 name = "py-holidays-rs"
-version = "0.0.5-alpha3"
+version = "0.0.5-alpha4"
 dependencies = [
  "chrono",
  "flate2",

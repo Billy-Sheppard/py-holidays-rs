@@ -23,4 +23,9 @@ fn main() {
         // flush and finish
         std::fs::write(path, e.finish().unwrap()).unwrap();
     }
+
+    if std::env::var("DOCS_RS").is_ok() {
+        println!("cargo:rerun-if-env-changed=DOCS_RS");
+        println!("cargo:rustc-cfg=docs_rs");
+    }
 }

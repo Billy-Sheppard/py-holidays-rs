@@ -1,5 +1,6 @@
 fn main() {
-    if std::fs::read("holidays").is_err() && std::env::var("DOCS_RS").is_err() {
+    let path = std::path::Path::new(&std::env::var("OUT_DIR").unwrap()).join("holidays");
+    if std::fs::read(&path).is_err() && std::env::var("DOCS_RS").is_err() {
         // install holidays package
         std::process::Command::new("pip")
             .arg("install")
@@ -19,7 +20,8 @@ fn main() {
         // compress the ron
         std::io::Write::write_all(&mut e, &py_out).unwrap();
 
+        std::fs::write("text.txt", std::env::var("OUT_DIR").unwrap()).unwrap();
         // flush and finish
-        std::fs::write("holidays", e.finish().unwrap()).unwrap();
+        std::fs::write(path, e.finish().unwrap()).unwrap();
     }
 }

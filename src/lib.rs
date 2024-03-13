@@ -1,14 +1,17 @@
-use std::{collections::BTreeMap, io::Read};
 mod types;
-
 pub use types::*;
 
+#[cfg(not(docs_rs))]
+use std::{collections::BTreeMap, io::Read};
+
+#[cfg(not(docs_rs))]
 type CountryHolidayMap =
     BTreeMap<types::CountryCode, BTreeMap<types::SubDivision, BTreeMap<chrono::NaiveDate, String>>>;
 
-
+#[cfg(not(docs_rs))]
 const HOLIDAYS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/holidays"));
 
+#[cfg(not(docs_rs))]
 pub fn initialise() -> Result<CountryHolidayMap, String> {
     let mut d = flate2::read::DeflateDecoder::new(HOLIDAYS);
     let mut out = Vec::new();
@@ -58,13 +61,12 @@ mod years {
 }
 
 #[cfg(test)]
-#[cfg(not(compile_env = "DOCS_RS"))]
+#[cfg(not(docs_rs))]
 mod tests {
     use super::*;
 
     #[test]
     fn test_initialise() {
-        dbg!(&initialise());
         assert!(initialise().is_ok());
     }
 

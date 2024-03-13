@@ -20,7 +20,6 @@ fn main() {
         // compress the ron
         std::io::Write::write_all(&mut e, &py_out).unwrap();
 
-        std::fs::write("text.txt", std::env::var("OUT_DIR").unwrap()).unwrap();
         // flush and finish
         std::fs::write(path, e.finish().unwrap()).unwrap();
     }

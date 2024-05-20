@@ -1,10 +1,23 @@
 fn main() {
-    let path = std::path::Path::new(&std::env::var("OUT_DIR").unwrap()).join("holidays");
+    let out_dir = std::env::var("OUT_DIR").unwrap();
+    let out_dir = std::path::Path::new(&out_dir);
+    let path = out_dir.join("holidays");
+
     if std::fs::read(&path).is_err() && std::env::var("DOCS_RS").is_err() {
+        // install holidays package
+        std::process::Command::new("python3")
+            .arg("-m")
+            .arg("venv")
+            .arg("python-env")
+            .current_dir(out_dir)
+            .output()
+            .unwrap();
+        
         // install holidays package
         std::process::Command::new("pip")
             .arg("install")
             .arg("holidays")
+            .arg("--require-venv")
             .output()
             .unwrap();
 

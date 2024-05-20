@@ -13,16 +13,21 @@ fn main() {
             .output()
             .unwrap();
 
+        let venv = out_dir.join("python-env");
+
         // install holidays package
-        std::process::Command::new("pip")
+
+        std::process::Command::new(venv.join("bin").join("pip"))
             .arg("install")
             .arg("holidays")
             .arg("--require-venv")
+            .env("VIRTUAL_ENV", venv.join("env"))
             .output()
             .unwrap();
 
         // generate objects
-        let py_out = std::process::Command::new("python")
+
+        let py_out = std::process::Command::new(venv.join("bin").join("python"))
             .arg("gen_objects.py")
             .stdout(std::process::Stdio::piped())
             .output()

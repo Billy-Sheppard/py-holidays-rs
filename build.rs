@@ -12,7 +12,7 @@ fn main() {
             .current_dir(out_dir)
             .output()
             .unwrap();
-        
+
         // install holidays package
         std::process::Command::new("pip")
             .arg("install")

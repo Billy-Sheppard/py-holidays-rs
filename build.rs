@@ -17,11 +17,11 @@ fn main() {
 
         // install holidays package
 
-        std::process::Command::new(venv.join("bin").join("pip"))
+        std::process::Command::new("pip")
             .arg("install")
             .arg("holidays")
             .arg("--require-venv")
-            .env("VIRTUAL_ENV", venv.join("env"))
+            .env("VIRTUAL_ENV", &venv)
             .output()
             .unwrap();
 

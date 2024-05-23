@@ -17,7 +17,7 @@ fn main() {
 
         // install holidays package
 
-        std::process::Command::new("pip")
+        std::process::Command::new(venv.join("bin").join("pip"))
             .arg("install")
             .arg("holidays")
             .arg("--require-venv")

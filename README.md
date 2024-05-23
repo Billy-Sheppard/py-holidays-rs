@@ -6,7 +6,7 @@
 [![crates.io](https://img.shields.io/crates/v/py-holidays-rs.svg)](https://crates.io/crates/py-holidays-rs)
 [![docs.rs](https://docs.rs/py-holidays-rs/badge.svg)](https://docs.rs/py-holidays-rs)
 
-Requires `python` and `pip` to be installed.
+Requires `python3.12-venv` to be installed.
 
 # ***In Alpha, feel free to PR.***
 

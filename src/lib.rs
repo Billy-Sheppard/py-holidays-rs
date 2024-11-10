@@ -1,17 +1,17 @@
 mod types;
 pub use types::*;
 
-#[cfg(not(docs_rs))]
+#[cfg(not(docsrs))]
 use std::{collections::BTreeMap, io::Read};
 
-#[cfg(not(docs_rs))]
+#[cfg(not(docsrs))]
 type CountryHolidayMap =
     BTreeMap<types::CountryCode, BTreeMap<types::SubDivision, BTreeMap<chrono::NaiveDate, String>>>;
 
-#[cfg(not(docs_rs))]
+#[cfg(not(docsrs))]
 const HOLIDAYS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/holidays"));
 
-#[cfg(not(docs_rs))]
+#[cfg(not(docsrs))]
 pub fn initialise() -> Result<CountryHolidayMap, String> {
     let mut d = flate2::read::DeflateDecoder::new(HOLIDAYS);
     let mut out = Vec::new();
@@ -20,10 +20,10 @@ pub fn initialise() -> Result<CountryHolidayMap, String> {
     ron::de::from_bytes(&out).map_err(|e| format!("{e:?}"))
 }
 
-#[cfg(all(feature = "years", not(target_arch = "wasm_32")))]
+#[cfg(all(feature = "years", not(target_arch = "wasm32")))]
 pub use years::*;
 
-#[cfg(all(feature = "years", not(target_arch = "wasm_32")))]
+#[cfg(all(feature = "years", not(target_arch = "wasm32")))]
 mod years {
     use std::{io::Write, process::Stdio};
 
@@ -61,7 +61,7 @@ mod years {
 }
 
 #[cfg(test)]
-#[cfg(not(docs_rs))]
+#[cfg(not(docsrs))]
 mod tests {
     use super::*;
 
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(all(feature = "years", not(target_arch = "wasm_32")))]
+    #[cfg(all(feature = "years", not(target_arch = "wasm32")))]
     fn test_generate_with_years() {
         assert!(generate_with_years(Vec::from([2023])).is_ok());
     }

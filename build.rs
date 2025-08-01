@@ -22,6 +22,7 @@ fn main() {
             .arg("holidays")
             .arg("--require-venv")
             .env("VIRTUAL_ENV", &venv)
+            .current_dir(out_dir)
             .output()
             .unwrap();
 
@@ -30,6 +31,7 @@ fn main() {
         let py_out = std::process::Command::new(venv.join("bin").join("python"))
             .arg("gen_objects.py")
             .stdout(std::process::Stdio::piped())
+            .current_dir(out_dir)
             .output()
             .unwrap()
             .stdout;

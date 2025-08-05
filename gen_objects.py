@@ -148,59 +148,44 @@ countries = [
     ("Zimbabwe", "ZW", [])
 ]
 
-# print opening object bracket
-print("{", file=sys.stdout)
+# country[1] -> country code
+# country[2] -> subdivision 
+all_data = {}
+
 # loop through countries
 for country in countries:
-    # print country code as first identifier
-    print(country[1] + ":", file=sys.stdout)
+
+    country_data = {}
+
+    # always add the national holidays
+    holidays_ = holidays.country_holidays(country[1], language="en_US", years=years)
+
+    # use the standard key "National" - the rust library knows this
+    country_data["National"] = {str(key): value for key, value in holidays_.items()}
 
     # if country has subdivisions 
     if len(country[2]) > 0:
-        # open an object
-        print("{", file=sys.stdout)
+
         # and loop through the subdivisions
         for subdiv in country[2]:
+
+            subdiv_name = subdiv
             # if the subdivision starts with a digit, preprend an underscore
             if subdiv[0].isdigit():
-                print("_" + subdiv + ":", file=sys.stdout)
-            else:
-                print(subdiv + ":", file=sys.stdout)
-            
-            # get out the specific subdivisions holidays
+                subdiv_name = "_" + subdiv
+
+            if subdiv_name == "National":
+                print(f"Unexpected subdivision named National for country {country[1]}")
+                sys.exit(1)
+
+            # add the holidays for each subdivision
             holidays_ = holidays.country_holidays(country[1], subdiv=subdiv, language="en_US", years=years)
-            # and stringify the keys
-            holidays_ = {str(key): value for key, value in holidays_.items()}
-            
-            # dump the holiday object as json
-            print(json.dumps(holidays_, ensure_ascii=False), file=sys.stdout)
-            print(",", file=sys.stdout)
 
-        # then do the same for the national holidays
-        # get out the specific national holidays
-        holidays_ = holidays.country_holidays(country[1], language="en_US", years=years)
-        # and stringify the keys
-        holidays_ = {str(key): value for key, value in holidays_.items()}
+            # the key here is the name of the subdivision itself
+            country_data[subdiv] = {str(key): value for key, value in holidays_.items()}
 
-        # print the key
-        print("National:", file=sys.stdout)
-        # dump the holiday object as json
-        print(json.dumps(holidays_, ensure_ascii=False), file=sys.stdout)
-
-        # close the object from line 161
-        print("},", file=sys.stdout)
-    else:
-        # get out the specific national holidays
-        holidays_ = holidays.country_holidays(country[1], language="en_US", years=years)
-        # and stringify the keys
-        holidays_ = {str(key): value for key, value in holidays_.items()}
-
-        # create a new object with the key
-        print("{National:", file=sys.stdout)        
-        # dump the holiday object as json
-        print(json.dumps(holidays_, ensure_ascii=False), file=sys.stdout)
-        # close the object from line 199
-        print("},", file=sys.stdout)
+    # add country holidays to the full dataset
+    all_data[country[1]] = country_data
 
 # close the object from line 152
-print("}", file=sys.stdout)
+print(json.dumps(all_data, ensure_ascii=False), file=sys.stdout)

@@ -2,7 +2,7 @@ mod types;
 pub use types::*;
 
 #[cfg(not(docsrs))]
-use std::{collections::BTreeMap, io::Read};
+use std::collections::BTreeMap;
 
 #[cfg(not(docsrs))]
 type CountryHolidayMap =
@@ -13,11 +13,8 @@ const HOLIDAYS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/holidays"));
 
 #[cfg(not(docsrs))]
 pub fn initialise() -> Result<CountryHolidayMap, String> {
-    let mut d = flate2::read::DeflateDecoder::new(HOLIDAYS);
-    let mut out = Vec::new();
-    d.read_to_end(&mut out).unwrap();
-
-    ron::de::from_bytes(&out).map_err(|e| format!("{e:?}"))
+    serde_json::from_reader(flate2::read::DeflateDecoder::new(HOLIDAYS))
+        .map_err(|e| format!("{e:?}"))
 }
 
 #[cfg(all(feature = "years", not(target_arch = "wasm32")))]

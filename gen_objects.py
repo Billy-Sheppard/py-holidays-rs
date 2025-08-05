@@ -1,9 +1,12 @@
 import sys
 import holidays
 import json
+from concurrent.futures import ProcessPoolExecutor
 
-years = [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030]
+# Define the range of years to include in holiday data
+years = list(range(2000, 2051))  # Inclusive: 2000 to 2050
 
+# List of countries: (Country Name, ISO Code, Subdivisions)
 countries = [
     ("Albania", "AL", []),
     ("Algeria", "DZ", []),
@@ -148,44 +151,55 @@ countries = [
     ("Zimbabwe", "ZW", [])
 ]
 
-# country[1] -> country code
-# country[2] -> subdivision 
-all_data = {}
+# Helper to fetch holiday data for a country or subdivision
+def get_holidays(country_code, subdiv=None):
+    return {
+        str(date): name
+        for date, name in holidays.country_holidays(
+            country_code, subdiv=subdiv, language="en_US", years=years
+        ).items()
+    }
 
-# loop through countries
-for country in countries:
+# Worker function to process one country
+def process_country(args):
+    country_name, country_code, subdivisions = args
+    country_holidays = {}
 
-    country_data = {}
+    try:
+        # National holidays
+        country_holidays["National"] = get_holidays(country_code)
 
-    # always add the national holidays
-    holidays_ = holidays.country_holidays(country[1], language="en_US", years=years)
+        # Subdivision holidays
+        for subdiv in subdivisions:
+            key = f"_{subdiv}" if subdiv[0].isdigit() else subdiv
+            if key == "National":
+                return (country_code, {
+                    "error": f"Conflict: subdivision named 'National' in country {country_code}"
+                })
 
-    # use the standard key "National" - the rust library knows this
-    country_data["National"] = {str(key): value for key, value in holidays_.items()}
+            subdiv_holidays = get_holidays(country_code, subdiv=subdiv)
+            if subdiv_holidays:
+                country_holidays[key] = subdiv_holidays
 
-    # if country has subdivisions 
-    if len(country[2]) > 0:
+    except Exception as e:
+        return (country_code, {"error": str(e)})
 
-        # and loop through the subdivisions
-        for subdiv in country[2]:
+    return (country_code, country_holidays)
 
-            subdiv_name = subdiv
-            # if the subdivision starts with a digit, preprend an underscore
-            if subdiv[0].isdigit():
-                subdiv_name = "_" + subdiv
+# Run in parallel
+def main():
+    all_data = {}
 
-            if subdiv_name == "National":
-                print(f"Unexpected subdivision named National for country {country[1]}")
+    with ProcessPoolExecutor() as executor:
+        results = executor.map(process_country, countries)
+        for country_code, data in results:
+            if "error" in data:
+                print(f"Error processing {country_code}: {data['error']}", file=sys.stderr)
                 sys.exit(1)
+            all_data[country_code] = data
 
-            # add the holidays for each subdivision
-            holidays_ = holidays.country_holidays(country[1], subdiv=subdiv, language="en_US", years=years)
+    # Output JSON
+    json.dump(all_data, sys.stdout, ensure_ascii=False)
 
-            # the key here is the name of the subdivision itself
-            country_data[subdiv] = {str(key): value for key, value in holidays_.items()}
-
-    # add country holidays to the full dataset
-    all_data[country[1]] = country_data
-
-# close the object from line 152
-print(json.dumps(all_data, ensure_ascii=False), file=sys.stdout)
+if __name__ == "__main__":
+    main()

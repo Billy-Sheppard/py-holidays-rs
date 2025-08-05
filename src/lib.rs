@@ -29,22 +29,34 @@ mod years {
     const SCRIPT: &str = include_str!("../gen_objects.py");
 
     pub fn generate_with_years(years: Vec<usize>) -> Result<CountryHolidayMap, String> {
-        let script = SCRIPT.replace("[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026,2027,2028,2029,2030,2031,2032,2033,2034,2035,2036,2037,2038,2039,2040,2041,2042,2043,2044,2045,2046,2047,2048,2049,2050]", &format!("{years:?}"));
+        let script = SCRIPT
+            .lines()
+            .map(|line| {
+                if line.trim_start().starts_with("years = ") {
+                    format!("years = {years:?}")
+                } else {
+                    line.into()
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
 
-        let mut process = std::process::Command::new("python")
-            .arg("-")
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .spawn()
-            .map_err(|e| format!("{e:?}"))?;
+        let mut process =
+            std::process::Command::new(format!("{}/python-env/bin/python3", env!("OUT_DIR")))
+                // .arg("--require-venv")
+                .arg("-")
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .env("VIRTUAL_ENV", format!("{}/python-env", env!("OUT_DIR")))
+                .spawn()
+                .map_err(|e| format!("{e:?}"))?;
 
         write!(
             process
                 .stdin
                 .as_mut()
                 .ok_or("Unable to get stdin as mut!")?,
-            "{}",
-            script
+            "{script}",
         )
         .map_err(|e| format!("{e:?}"))?;
 
@@ -53,7 +65,7 @@ mod years {
             .map_err(|e| format!("{e:?}"))?
             .stdout;
 
-        ron::de::from_bytes(&out).map_err(|e| format!("{e:?}"))
+        serde_json::from_slice(&out).map_err(|e| format!("{e:?}"))
     }
 }
 
@@ -64,13 +76,21 @@ mod tests {
 
     #[test]
     fn test_initialise() {
-        assert!(initialise().is_ok());
+        let i = initialise()
+        // .inspect_err(|e| {
+        //     dbg!(e);
+        // })
+        ;
+        assert!(i.is_ok());
     }
 
     #[test]
     #[cfg(all(feature = "years", not(target_arch = "wasm32")))]
     fn test_generate_with_years() {
-        assert!(generate_with_years(Vec::from([2023])).is_ok());
+        let i = generate_with_years(Vec::from([2023])).inspect_err(|e| {
+            dbg!(e);
+        });
+        assert!(i.is_ok());
     }
 
     // todo: more tests

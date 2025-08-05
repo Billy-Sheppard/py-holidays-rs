@@ -87,9 +87,11 @@ mod tests {
     #[test]
     #[cfg(all(feature = "years", not(target_arch = "wasm32")))]
     fn test_generate_with_years() {
-        let i = generate_with_years(Vec::from([2023])).inspect_err(|e| {
-            dbg!(e);
-        });
+        let i = generate_with_years(Vec::from([2023]))
+        // .inspect_err(|e| {
+        //     dbg!(e);
+        // })
+        ;
         assert!(i.is_ok());
     }
 

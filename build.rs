@@ -59,13 +59,12 @@ fn main() {
             }
         }
 
-
         if serde_json::from_slice::<serde_json::Value>(&output.stdout).is_err() {
             panic!("Generated holidays are not valid JSON")
         }
 
         let mut e = flate2::write::DeflateEncoder::new(Vec::new(), flate2::Compression::best());
-        
+
         // compress the json
         std::io::Write::write_all(&mut e, &output.stdout).unwrap();
 

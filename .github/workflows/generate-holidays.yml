@@ -1,0 +1,47 @@
+name: Run `gen_holidays.py`
+
+on:
+  schedule:
+    - cron: '0 19 * * *'  # 6 AM Australia/Melbourne time (UTC+10/11)
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run-python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true  # needed for pushing changes
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run script
+        run: python gen_holidays.py
+
+      - name: Commit and push changes if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add ./files/*.json ./all_holidays.json
+
+          # Check for changes
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update holiday JSON files [auto commit]"
+            git push
+          fi

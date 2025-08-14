@@ -1,10 +1,9 @@
-import sys
 import holidays
 import json
-from concurrent.futures import ProcessPoolExecutor
+import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Define the range of years to include in holiday data
-years = list(range(2000, 2051))  # Inclusive: 2000 to 2050
+years = list(range(2000, 2051))
 
 # List of countries: (Country Name, ISO Code, Subdivisions)
 countries = [
@@ -151,55 +150,60 @@ countries = [
     ("Zimbabwe", "ZW", [])
 ]
 
-# Helper to fetch holiday data for a country or subdivision
-def get_holidays(country_code, subdiv=None):
-    return {
-        str(date): name
-        for date, name in holidays.country_holidays(
-            country_code, subdiv=subdiv, language="en_US", years=years
-        ).items()
+# Ensure output directory exists
+os.makedirs("files", exist_ok=True)
+
+# Dictionary to hold all holidays
+all_holidays = {}
+
+def process_country(country_name, country_code, subdivisions):
+    country_data = {}
+
+    if subdivisions:
+        for subdiv in subdivisions:
+            key = "_" + subdiv if subdiv[0].isdigit() else subdiv
+            try:
+                holiday_data = holidays.country_holidays(
+                    country_code, subdiv=subdiv, language="en_US", years=years
+                )
+                country_data[key] = {str(date): name for date, name in holiday_data.items()}
+            except Exception as e:
+                country_data[key] = {"error": str(e)}
+
+        # Add national holidays
+        try:
+            national = holidays.country_holidays(country_code, language="en_US", years=years)
+            country_data["National"] = {str(date): name for date, name in national.items()}
+        except Exception as e:
+            country_data["National"] = {"error": str(e)}
+    else:
+        try:
+            national = holidays.country_holidays(country_code, language="en_US", years=years)
+            country_data["National"] = {str(date): name for date, name in national.items()}
+        except Exception as e:
+            country_data["National"] = {"error": str(e)}
+
+    # Write per-country file
+    with open(f"./files/{country_code}.json", "w", encoding="utf-8") as f:
+        json.dump(country_data, f, ensure_ascii=False, indent=2)
+
+    return country_code, country_data
+
+# Use ThreadPoolExecutor to parallelize
+with ThreadPoolExecutor(max_workers=10) as executor:
+    future_to_country = {
+        executor.submit(process_country, name, code, subdivs): code
+        for name, code, subdivs in countries
     }
 
-# Worker function to process one country
-def process_country(args):
-    country_name, country_code, subdivisions = args
-    country_holidays = {}
+    for future in as_completed(future_to_country):
+        country_code = future_to_country[future]
+        try:
+            code, data = future.result()
+            all_holidays[code] = data
+        except Exception as exc:
+            all_holidays[country_code] = {"error": str(exc)}
 
-    try:
-        # National holidays
-        country_holidays["National"] = get_holidays(country_code)
-
-        # Subdivision holidays
-        for subdiv in subdivisions:
-            key = f"_{subdiv}" if subdiv[0].isdigit() else subdiv
-            if key == "National":
-                return (country_code, {
-                    "error": f"Conflict: subdivision named 'National' in country {country_code}"
-                })
-
-            subdiv_holidays = get_holidays(country_code, subdiv=subdiv)
-            if subdiv_holidays:
-                country_holidays[key] = subdiv_holidays
-
-    except Exception as e:
-        return (country_code, {"error": str(e)})
-
-    return (country_code, country_holidays)
-
-# Run in parallel
-def main():
-    all_data = {}
-
-    with ProcessPoolExecutor() as executor:
-        results = executor.map(process_country, countries)
-        for country_code, data in results:
-            if "error" in data:
-                print(f"Error processing {country_code}: {data['error']}", file=sys.stderr)
-                sys.exit(1)
-            all_data[country_code] = data
-
-    # Output JSON
-    json.dump(all_data, sys.stdout, ensure_ascii=False)
-
-if __name__ == "__main__":
-    main()
+# Write final combined JSON
+with open("./all_holidays.json", "w", encoding="utf-8") as f:
+    json.dump(all_holidays, f, ensure_ascii=False, indent=2)

@@ -31,13 +31,16 @@ jobs:
       - name: Run script
         run: python gen_holidays.py
 
+      - name: Minify and gzip JSON files
+        run: python minify_and_gzip.py
+
       - name: Commit and push changes if any
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ./files/*.json ./all_holidays.json
+          git add ./files/*.json.gz ./all_holidays.json.gz
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else

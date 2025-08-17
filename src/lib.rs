@@ -1,99 +1,96 @@
 mod types;
 pub use types::*;
 
-#[cfg(not(docsrs))]
-use std::collections::BTreeMap;
+use std::{
+    collections::BTreeMap,
+    sync::{Arc, Mutex},
+};
 
-#[cfg(not(docsrs))]
 type CountryHolidayMap =
     BTreeMap<types::CountryCode, BTreeMap<types::SubDivision, BTreeMap<chrono::NaiveDate, String>>>;
 
-#[cfg(not(docsrs))]
-const HOLIDAYS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/holidays"));
+static ALL_HOLIDAYS: std::sync::LazyLock<Result<Arc<CountryHolidayMap>, String>> =
+    std::sync::LazyLock::new(|| {
+        let mut body = ureq::get("https://raw.githubusercontent.com/Billy-Sheppard/py-holidays-rs/refs/heads/main/all_holidays.json.gz") 
+            .call()
+            .map_err(|e| e.to_string())?
+            .into_body();
+        let deflated = flate2::read::GzDecoder::new(body.as_reader());
 
-#[cfg(not(docsrs))]
-pub fn initialise() -> Result<CountryHolidayMap, String> {
-    serde_json::from_reader(flate2::read::DeflateDecoder::new(HOLIDAYS))
-        .map_err(|e| format!("{e:?}"))
+        Ok(Arc::new(
+            serde_json::from_reader(deflated).map_err(|e| e.to_string())?,
+        ))
+    });
+
+pub fn initialise_all() -> Result<Arc<CountryHolidayMap>, String> {
+    ALL_HOLIDAYS.clone()
 }
 
-#[cfg(all(feature = "years", not(target_arch = "wasm32")))]
-pub use years::*;
+static PER_COUNTRY_HOLIDAYS: std::sync::LazyLock<Mutex<CountryHolidayMap>> =
+    std::sync::LazyLock::new(|| Mutex::new(Default::default()));
 
-#[cfg(all(feature = "years", not(target_arch = "wasm32")))]
-mod years {
-    use std::{io::Write, process::Stdio};
+pub fn initialise_country(
+    country: CountryCode,
+) -> Result<BTreeMap<types::SubDivision, BTreeMap<chrono::NaiveDate, String>>, String> {
+    let mut map = PER_COUNTRY_HOLIDAYS.lock().map_err(|e| e.to_string())?;
 
-    use crate::CountryHolidayMap;
+    match map.contains_key(&country) {
+        true => Ok(map.get(&country).unwrap().clone()),
+        false => {
+            let mut body = ureq::get(format!("https://raw.githubusercontent.com/Billy-Sheppard/py-holidays-rs/refs/heads/main/files/{:?}.json.gz", country)) 
+                .call()
+                .map_err(|e| e.to_string())?
+                .into_body();
+            let deflated = flate2::read::GzDecoder::new(body.as_reader());
 
-    const SCRIPT: &str = include_str!("../gen_objects.py");
+            let holidays = serde_json::from_reader::<_, BTreeMap<_, _>>(deflated)
+                .map_err(|e| e.to_string())?;
+            map.insert(country, holidays.clone());
 
-    pub fn generate_with_years(years: Vec<usize>) -> Result<CountryHolidayMap, String> {
-        let script = SCRIPT
-            .lines()
-            .map(|line| {
-                if line.trim_start().starts_with("years = ") {
-                    format!("years = {years:?}")
-                } else {
-                    line.into()
-                }
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
-
-        let mut process =
-            std::process::Command::new(format!("{}/python-env/bin/python3", env!("OUT_DIR")))
-                // .arg("--require-venv")
-                .arg("-")
-                .stdin(Stdio::piped())
-                .stdout(Stdio::piped())
-                .env("VIRTUAL_ENV", format!("{}/python-env", env!("OUT_DIR")))
-                .spawn()
-                .map_err(|e| format!("{e:?}"))?;
-
-        write!(
-            process
-                .stdin
-                .as_mut()
-                .ok_or("Unable to get stdin as mut!")?,
-            "{script}",
-        )
-        .map_err(|e| format!("{e:?}"))?;
-
-        let out = process
-            .wait_with_output()
-            .map_err(|e| format!("{e:?}"))?
-            .stdout;
-
-        serde_json::from_slice(&out).map_err(|e| format!("{e:?}"))
+            Ok(holidays)
+        }
     }
 }
 
 #[cfg(test)]
-#[cfg(not(docsrs))]
 mod tests {
     use super::*;
 
     #[test]
     fn test_initialise() {
-        let i = initialise()
-        // .inspect_err(|e| {
-        //     dbg!(e);
-        // })
-        ;
+        let i = initialise_all()
+            // .inspect_err(|e| {
+            //     dbg!(e);
+            // })
+            ;
         assert!(i.is_ok());
     }
 
     #[test]
-    #[cfg(all(feature = "years", not(target_arch = "wasm32")))]
-    fn test_generate_with_years() {
-        let i = generate_with_years(Vec::from([2023]))
-        // .inspect_err(|e| {
-        //     dbg!(e);
-        // })
-        ;
+    fn test_au() {
+        let i = initialise_country(CountryCode::AU).inspect_err(|e| {
+            dbg!(e);
+        });
         assert!(i.is_ok());
     }
 
-    // todo: more tests
+    #[test]
+    fn test_gb() {
+        let i = initialise_country(CountryCode::GB)
+            // .inspect_err(|e| {
+            //     dbg!(e);
+            // })
+            ;
+        assert!(i.is_ok());
+    }
+
+    #[test]
+    fn test_us() {
+        let i = initialise_country(CountryCode::US)
+            // .inspect_err(|e| {
+            //     dbg!(e);
+            // })
+            ;
+        assert!(i.is_ok());
+    }
 }

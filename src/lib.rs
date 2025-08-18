@@ -68,9 +68,11 @@ mod tests {
 
     #[test]
     fn test_au() {
-        let i = initialise_country(CountryCode::AU).inspect_err(|e| {
-            dbg!(e);
-        });
+        let i = initialise_country(CountryCode::AU)
+            // .inspect_err(|e| {
+            //     dbg!(e);
+            // })
+            ;
         assert!(i.is_ok());
     }
 

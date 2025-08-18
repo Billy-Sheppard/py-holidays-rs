@@ -1,6 +1,6 @@
 [package]
 name = "py-holidays-rs"
-version = "0.0.13"
+version = "0.0.14"
 edition = "2021"
 authors = ["Billy Sheppard"]
 license = "Apache-2.0"
@@ -10,7 +10,7 @@ description = "Public Holiday crate based on the python Holidays package"
 repository = "https://github.com/Billy-Sheppard/py-holidays-rs"
 homepage = "https://github.com/Billy-Sheppard/py-holidays-rs"
 exclude = [
-    "all_holidays.json",
+    "all_holidays.json.gz",
     "files/*"
 ]
 

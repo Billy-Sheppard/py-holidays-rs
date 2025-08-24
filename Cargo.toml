@@ -1,6 +1,6 @@
 [package]
 name = "py-holidays-rs"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Billy Sheppard"]
 license = "Apache-2.0"
@@ -15,14 +15,19 @@ exclude = [
 ]
 
 [dependencies]
-serde_json = { features = ["std"], version = "1.0.142", default-features = false, optional = false }
+serde_json = { features = ["std"], version = "1.0.143", default-features = false, optional = false }
 serde = { features = ["derive", "std"], version = "1.0.219", default-features = false, optional = false }
 chrono = { features = ["serde", "std"], version = "0.4.41", default-features = false, optional = false }  
 flate2 = { features = ["rust_backend"], version = "1.1.1" , default-features = false, optional = false }
 rust-embed = { version = "8.7.2", default-features = false, optional = true }
 
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-ureq = { features = ["gzip", "rustls"], version = "3.1.0", default-features = false, optional = false }
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies] 
+hyper = { version = "1.0", features = ["client", "http1", "http2"] }
+hyper-util = { version = "0.1", features = ["client", "client-legacy", "http1", "http2", "tokio"] }
+hyper-tls = "0.6"
+http-body-util = "0.1"
+tokio = { version = "1.0", features = ["full"] }
+
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 once_cell = { features = ["std"], version = "1.21.3", default-features = false, optional = false }

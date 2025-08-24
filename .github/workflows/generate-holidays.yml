@@ -5,8 +5,8 @@ on:
     - cron: '0 19 * * *'  # 6 AM Australia/Melbourne time (UTC+10/11)
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  # pull_request:
+  #   branches: [ main ]
 
 jobs:
   run-python:

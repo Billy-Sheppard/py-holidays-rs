@@ -9,6 +9,7 @@ use wasm32::*;
 #[cfg(not(target_arch = "wasm32"))]
 mod x86_64;
 #[cfg(not(target_arch = "wasm32"))]
+#[allow(unused_imports)]
 use x86_64::*;
 
 use std::{

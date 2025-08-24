@@ -1,14 +1,12 @@
 use std::io::Read;
 pub(crate) fn get(url: impl AsRef<str>) -> Result<Vec<u8>, String> {
-    let body = ureq::get(url.as_ref())
-        .call()
+    let body = reqwest::blocking::get(url.as_ref())
         .map_err(|e| e.to_string())?
-        .into_body()
-        .read_to_vec()
+        .bytes()
         .map_err(|e| e.to_string())?;
 
     let mut deflated = Vec::new();
-    flate2::read::GzDecoder::new(body.as_slice())
+    flate2::read::GzDecoder::new(body.as_ref())
         .read_to_end(&mut deflated)
         .map_err(|e| e.to_string())?;
 

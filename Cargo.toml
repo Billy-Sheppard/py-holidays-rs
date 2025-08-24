@@ -22,7 +22,7 @@ flate2 = { features = ["rust_backend"], version = "1.1.1" , default-features = f
 rust-embed = { version = "8.7.2", default-features = false, optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-ureq = { features = ["gzip", "rustls"], version = "3.1.0", default-features = false, optional = false }
+reqwest = { features = ["rustls-tls","blocking"], version = "0.12.23", default-features = false, optional = false }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 once_cell = { features = ["std"], version = "1.21.3", default-features = false, optional = false }

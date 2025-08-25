@@ -1,6 +1,6 @@
 [package]
 name = "py-holidays-rs"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 authors = ["Billy Sheppard"]
 license = "Apache-2.0"
@@ -9,10 +9,6 @@ readme = "README.md"
 description = "Public Holiday crate based on the python Holidays package"
 repository = "https://github.com/Billy-Sheppard/py-holidays-rs"
 homepage = "https://github.com/Billy-Sheppard/py-holidays-rs"
-exclude = [
-    "all_holidays.json.gz",
-    "files/*"
-]
 
 [dependencies]
 serde_json = { features = ["std"], version = "1.0.143", default-features = false, optional = false }
@@ -22,12 +18,11 @@ flate2 = { features = ["rust_backend"], version = "1.1.1" , default-features = f
 rust-embed = { version = "8.7.2", default-features = false, optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies] 
-hyper = { version = "1.0", features = ["client", "http1", "http2"] }
-hyper-util = { version = "0.1", features = ["client", "client-legacy", "http1", "http2", "tokio"] }
-hyper-tls = "0.6"
-http-body-util = "0.1"
-tokio = { version = "1.0", features = ["full"] }
-
+hyper = { version = "1.7.0", features = ["client", "http1", "http2"], optional = true }
+hyper-util = { version = "0.1.16", features = ["client", "client-legacy", "http1", "http2", "tokio"], optional = true }
+hyper-tls = { version = "0.6.0", optional = true }
+http-body-util = { version = "0.1.3", optional = true }
+tokio = { version = "1.47.1", features = ["full"], optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 once_cell = { features = ["std"], version = "1.21.3", default-features = false, optional = false }
@@ -36,5 +31,5 @@ wasm-bindgen = { version = "0.2.100", default-features = false, optional = false
 wasm-bindgen-futures = { version = "0.4.30", default-features = false, optional = false }
  
 [features]
-default = []
-offline = ["rust-embed"]
+default = [ "hyper", "hyper-util", "hyper-tls", "http-body-util", "tokio" ]
+offline = [ "rust-embed" ]
